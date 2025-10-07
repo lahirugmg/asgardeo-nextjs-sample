@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { AsgardeoProvider } from "@asgardeo/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { resolveAsgardeoConfig } from "@/lib/asgardeoConfig";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,12 +24,42 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const asgardeoConfig = resolveAsgardeoConfig();
+
+  if (!asgardeoConfig && process.env.NODE_ENV !== "production") {
+    console.warn(
+      "Asgardeo configuration is incomplete. Update NEXT_PUBLIC_ASGARDEO_BASE_URL, NEXT_PUBLIC_ASGARDEO_CLIENT_ID, and NEXT_PUBLIC_ASGARDEO_CLIENT_SECRET in your environment."
+    );
+  }
+
+  if (!asgardeoConfig) {
+    return (
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
+          <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6 text-center">
+            <div className="max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <h1 className="mb-2 text-xl font-semibold text-slate-900">
+                Asgardeo configuration missing
+              </h1>
+              <p className="text-sm text-slate-600">
+                Set NEXT_PUBLIC_ASGARDEO_BASE_URL, NEXT_PUBLIC_ASGARDEO_CLIENT_ID,
+                and ASGARDEO_CLIENT_SECRET in your environment to enable authentication.
+              </p>
+            </div>
+          </main>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <AsgardeoProvider {...asgardeoConfig}>{children}</AsgardeoProvider>
       </body>
     </html>
   );
